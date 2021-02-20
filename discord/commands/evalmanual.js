@@ -1,96 +1,102 @@
-const { RichEmbed } = require('discord.js');
+/** This is a test command to show what command files should look like */
+const Discord = require(`Discord.js`);
+// The run function should ALWAYS take CommandStruct and PermStruct
+module.exports.run = (CommandStruct, PermStruct) => {
+      //const flairwarsInfo = require('../flairwarsInfo');
 
-exports.run = async (client, message, args, level, r, unbClient) => {
+      if (CommandStruct.args.length === 0) {
+          CommandStruct.message.channel.send("No message found")
+          return;
+      }
+      // if no args given
 
-
-    if (args.length === 0) {
-        message.channel.send("No message found")
-        return;
-    }
-    // if no args given
-
-    const suggestConfig = client.config.suggestions;
-
-
-    var suggestionsID = args[1].toLowerCase();
-    var acceptOrReject = args[0].toLowerCase();
-    //divide up the accept/deny and messageID
-
-    if (acceptOrReject === "accept" || acceptOrReject === "deny") {
-
-    }
-    else {
-        message.channel.send(acceptOrReject + " Isn't valid. Use accept or deny.")
-        return;
-    }
-    //if a/d doesn't = a/d then they spelt it wrong so let them know
-
-    const command = message;
-    //use this instead of message in the following block to reply to command
-
-    var channelID = args[2].toLowerCase();
-    const suggestionPollChannel = message.guild.channels.get(channelID);
-
-    suggestionPollChannel.fetchMessage(suggestionsID)
-        .then(message => {
-            
-    
-
-            message.embeds.forEach((embed) => {
-                const messageAuthor = embed.author.name;
-                const messageAuthorPfp = embed.author.iconURL;
-                const messageContent = embed.description;
-                const messageTime = embed.timestamp;
-
-                var newPollEmbed = new RichEmbed()
-                    .setDescription(messageContent)
-                    .setAuthor(messageAuthor, messageAuthorPfp)
-                    .setTimestamp(messageTime)
+      //const suggestConfig = client.config.suggestions;
+      const suggestConfig = {
+          "discussionChannelID": '479768552534966286',
+          "pollChannelID": '811781298876055562', // Megaserver pollChannelID = 482269113389940737
+          "modPollChannelID": '531511366855688222',
+          "votesToPass": 20,
+          "defaultColour": "#C9DDFF",
+          "defaultColourDecimal": 13229567,     // Because that's what the embeds are using internally
+          "acceptedColour": "#3ACE04",
+          "rejectedColour": "#AF0303",
+          "inProgressColour": "#FFE500",
+          "inProgressColourDecimal": 16770304
+      };
 
 
-                if (acceptOrReject === "accept") {
-                    newPollEmbed.setColor(suggestConfig.acceptedColour);
-                    newPollEmbed.setColor(suggestConfig.acceptedColour);
-                    newPollEmbed.setFooter(`Suggestion was accepted`);
-                } else {
-                    newPollEmbed.setColor(suggestConfig.rejectedColour);
-                    newPollEmbed.setColor(suggestConfig.rejectedColour);
-                    newPollEmbed.setFooter(`Suggestion was rejected`);
-                }
+      var suggestionsID = CommandStruct.args[2].toLowerCase();
+      var channelID = CommandStruct.args[1].toLowerCase();
+      var acceptOrReject = CommandStruct.args[0].toLowerCase();
+      //divide up the accept/deny and messageID
 
-                message.edit(newPollEmbed);
+      const command = CommandStruct.message;
+      //use this instead of message in the following block to reply to command
 
-                command.react('👌');   // :ok_hand:
+      const suggestionPollChannel = CommandStruct.message.guild.channels.cache.get(channelID);
 
-            })
+      if (acceptOrReject === "accept" || acceptOrReject === "deny") {
+        suggestionPollChannel.messages.fetch(suggestionsID).then(message => {
+          const messageAuthor = message.author.name;
+          const messageAuthorPfp = message.author.iconURL;
+          const messageContent = message.description;
+          const messageTime = message.timestamp;
 
+          let newPollEmbed = new Discord.MessageEmbed(message.embed)
 
+          if (acceptOrReject === "accept") {
+            newPollEmbed.setColor(suggestConfig.acceptedColour);
+            newPollEmbed.setColor(suggestConfig.acceptedColour);
+            newPollEmbed.setFooter(`Suggestion was accepted`);
+          } else {
+            newPollEmbed.setColor(suggestConfig.rejectedColour);
+            newPollEmbed.setColor(suggestConfig.rejectedColour);
+            newPollEmbed.setFooter(`Suggestion was rejected`);
+          }
 
-
+          message.edit(newPollEmbed);
+          command.react('👌');
         })
+      } else {
+          CommandStruct.message.channel.send(acceptOrReject + " Isn't valid. Use accept or deny.")
+          return;
+      }
+      //if a/d doesn't = a/d then they spelt it wrong so let them know
 
+//      suggestionPollChannel.messages.fetch(suggestionsID).then(message => {
+//        CommandStruct.message.embeds.forEach((embed) => {
+//          const messageAuthor = embed.author.name;
+//          const messageAuthorPfp = embed.author.iconURL;
+//          const messageContent = embed.description;
+//          const messageTime = embed.timestamp;
+//
+//          var newPollEmbed = new RichEmbed()
+//          .setDescription(messageContent)
+//          .setAuthor(messageAuthor, messageAuthorPfp)
+//          .setTimestamp(messageTime)
+//
+//          if (acceptOrReject === "accept") {
+//            newPollEmbed.setColor(suggestConfig.acceptedColour);
+//            newPollEmbed.setColor(suggestConfig.acceptedColour);
+//            newPollEmbed.setFooter(`Suggestion was accepted`);
+//          } else {
+//            newPollEmbed.setColor(suggestConfig.rejectedColour);
+//            newPollEmbed.setColor(suggestConfig.rejectedColour);
+//            newPollEmbed.setFooter(`Suggestion was rejected`);
+//          }
+//
+//          message.edit(newPollEmbed);
+//
+//          command.react('👌');   // :ok_hand:
+//        })
+//      })
 
+}
 
-        
+// This should be a string, it will be used in the detailed help command for a specific command
+module.exports.helpText = `Updates the colour of the suggestion embeds - but manually`
 
+// This should be a string. It will be used for general help to list commands by category
+module.exports.Category = `Utility`
 
-    
-};
-
-exports.conf = {
-  enabled: true,
-  guildOnly: true,
-  aliases: ["manualeval", "sgev", "evalman", "maneval"],
-  permLevel: "Oil",
-  channelPerms: "All",
-  userCooldown: false,
-  globalCooldown: false,
-  cooldownDuration: 0
-};
-
-exports.help = {
-  name: "evalmanual",
-  category: "Moderating",
-  description: "Updates the colour of the suggestion embeds - but manually.",
-    usage: "evalmanual <accept/deny> <messageID>"
-};
+module.exports.RequiredPermissions = ["Admin"]
